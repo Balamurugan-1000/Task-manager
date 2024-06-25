@@ -1,0 +1,38 @@
+import mongoose from "mongoose";
+import sequence from 'mongoose-sequence'
+// const { default: sequence } = await import('mongoose-sequence');
+const AutoIncrement = sequence(mongoose);
+const noteSchema = new mongoose.Schema({
+	user: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: true,
+		ref: 'User'
+
+	},
+	title: {
+		type: String,
+		required: true
+	},
+	text: {
+		type: String,
+		required: true
+	},
+	completed: {
+		type: Boolean,
+		default: false
+	},
+
+
+},
+	{
+		timestamps: true
+	}
+)
+
+
+noteSchema.plugin(AutoIncrement, {
+	inc_field: 'ticket',
+	id: 'ticketNums',
+	start_set: 500
+})
+export default mongoose.model('Note', noteSchema)
