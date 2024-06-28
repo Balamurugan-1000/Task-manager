@@ -11,7 +11,7 @@ import { corsOptions } from "./config/corsOptions.js";
 import connectDb from "./config/db.js";
 import mongoose from "mongoose";
 import userRoutes from './routes/userRoutes.js'
-import noteRoutes from './routes/noteRoutes.js'
+import taskRoutes from './routes/taskRoutes.js'
 
 const PORT = process.env.PORT || 3500
 
@@ -28,7 +28,7 @@ app.use(cookieParser())
 app.use('/', express.static(path.join(__dirname, 'public')))
 app.use('/', router)
 app.use('/users', userRoutes)
-app.use('/notes', noteRoutes)
+app.use('/tasks', taskRoutes)
 app.all('*', (req, res) => {
 	res.status(404)
 	if (req.accepts('html')) {

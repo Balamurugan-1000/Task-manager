@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 import sequence from 'mongoose-sequence'
 // const { default: sequence } = await import('mongoose-sequence');
 const AutoIncrement = sequence(mongoose);
-const noteSchema = new mongoose.Schema({
-	user: {
+const taskSchema = new mongoose.Schema({
+	AssignedTo: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: true,
 		ref: 'User'
@@ -13,14 +13,28 @@ const noteSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
-	text: {
+	description: {
 		type: String,
 		required: true
 	},
-	completed: {
-		type: Boolean,
-		default: false
+	status: {
+		type: String,
+		default: 'incompleted'
 	},
+	priority: {
+		type: String,
+		required: true
+	},
+	DueDate: {
+		type: String,
+		required: true
+	},
+	Subtasks: [{
+		type: String,
+		required: false
+	}]
+
+
 
 
 },
@@ -30,9 +44,9 @@ const noteSchema = new mongoose.Schema({
 )
 
 
-noteSchema.plugin(AutoIncrement, {
+taskSchema.plugin(AutoIncrement, {
 	inc_field: 'ticket',
 	id: 'ticketNums',
 	start_set: 500
 })
-export default mongoose.model('Note', noteSchema)
+export default mongoose.model('Task', taskSchema)

@@ -1,5 +1,5 @@
 import User from '../models/User.js'
-import Note from '../models/Note.js'
+import Task from '../models/Task.js'
 import asyncHandler from 'express-async-handler'
 import bcrypt, { hash } from 'bcrypt'
 
@@ -23,7 +23,6 @@ const createUsers = asyncHandler(async (req, res) => {
 	const duplicate = await User.findOne({ username }).lean().exec()
 	if (duplicate) {
 		return res.status(409).json({ message: 'Duplicate Username' })
-
 	}
 
 	const hashedPassword = await bcrypt.hash(password, 10)
@@ -76,10 +75,10 @@ const deleteUsers = asyncHandler(async (req, res) => {
 		return res.status(400).json({ message: 'User Id is required' })
 	}
 
-	const note = await Note.findOne({ user: id }).lean().exec()
+	const task = await Task.findOne({ user: id }).lean().exec()
 
-	if (note) {
-		res.status(400).json({ message: 'User has assigned notes' })
+	if (task) {
+		res.status(400).json({ message: 'User has assigned tasks' })
 	}
 
 	const user = await User.findById(id).exec()
