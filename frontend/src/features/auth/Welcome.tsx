@@ -19,21 +19,21 @@ const Welcome = () => {
 							<div className="gap-1 join join-vertical lg:join-horizontal">
 								<Link
 									to={"notes"}
-									className="btn join-item btn-primary"
+									className="text-white btn join-item btn-primary"
 								>
 									<button>View Notes</button>
 								</Link>
 								<Link
 									to={"users"}
-									className="btn join-item btn-secondary"
+									className="text-white btn join-item btn-secondary"
 								>
 									<button>View Users</button>
 								</Link>
 								<Link
-									to={"notes"}
-									className="btn btn-accent join-item"
+									to={"groups"}
+									className="text-white btn btn-accent join-item"
 								>
-									<button>View Notes</button>
+									<button>View Groups</button>
 								</Link>
 							</div>
 						</div>

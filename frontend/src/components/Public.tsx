@@ -1,8 +1,10 @@
 /** @format */
 
 import { Link } from "react-router-dom";
-import React from "react";
 const Public = () => {
+	let data = localStorage.getItem("user");
+	data = JSON.parse(data);
+	const content = data?.user ? "Dash" : "Login";
 	return (
 		<div className="w-screen h-screen overflow-hidden">
 			<div className="nav">
@@ -34,7 +36,7 @@ const Public = () => {
 								className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 							>
 								<li>
-									<a>Item 1</a>
+									<Link to={"/dash"}>Item 1</Link>
 								</li>
 								<li>
 									<a>Parent</a>
@@ -88,7 +90,7 @@ const Public = () => {
 								to="/login"
 								className="text-lg"
 							>
-								Login
+								{content}
 							</Link>
 						</button>
 					</div>
@@ -106,9 +108,11 @@ const Public = () => {
 								Welcome to Taskify, the best task manager you'll
 								ever use.
 							</p>
-							<button className="text-white btn-primary btn">
-								Get Started
-							</button>
+							<Link to={"/register"}>
+								<button className="text-white btn-primary btn">
+									Get Started
+								</button>
+							</Link>
 						</div>
 					</div>
 				</div>

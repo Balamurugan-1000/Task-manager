@@ -1,11 +1,36 @@
 /** @format */
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHouse } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 const DashFooter = () => {
+	const navigate = useNavigate();
+	const { pathname } = useLocation();
+	const onGoHomeClicked = () => navigate("/dash");
+	const user = useSelector(state => state.auth.user.user);
+
+	let goHomeButton = null;
+	if (pathname !== "/dash") {
+		goHomeButton = (
+			<button
+				className="btn btn-ghost"
+				title="Home"
+				onClick={onGoHomeClicked}
+			>
+				<FontAwesomeIcon
+					icon={faHouse}
+					className="h-6"
+				/>
+			</button>
+		);
+	}
 	return (
 		<footer className="absolute bottom-0 items-center p-4 footer bg-neutral text-neutral-content">
 			<aside className="items-center grid-flow-col gap-10">
-				<p>Current User :</p>
-				<p>Current State :</p>
+				{goHomeButton}
+				<p>Current User : {user.username}</p>
+				<p>Current State : {user.status ? "Active" : "Inactive"}</p>
+				<p>Role : {user.roles === 5000 ? "Admin" : "Employee"}</p>
 			</aside>
 			<nav className="grid-flow-col gap-4 md:place-self-center md:justify-self-end">
 				<button className="mr-4">

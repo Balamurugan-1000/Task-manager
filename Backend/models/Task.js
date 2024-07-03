@@ -32,7 +32,11 @@ const taskSchema = new mongoose.Schema({
 	Subtasks: [{
 		type: String,
 		required: false
-	}]
+	}],
+	Group: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Group'
+	}
 
 
 

@@ -1,18 +1,28 @@
 /** @format */
 
-import { Outlet } from "react-router-dom";
 import DashHeader from "./DashHeader.tsx";
 import DashFooter from "./DashFooter.tsx";
-
+import { useSelector } from "react-redux";
+import { useLocation, Navigate, Outlet } from "react-router-dom";
 const DashLayout = () => {
+	const location = useLocation();
+	const token = useSelector(state => state.auth.token);
+	if (!token) {
+		return (
+			<Navigate
+				to="/login"
+				state={{ from: location }}
+				replace
+			/>
+		);
+	}
+
 	return (
-		<div className="flex flex-col items-center justify-between w-screen h-screen overflow-hidden ">
+		<>
 			<DashHeader />
-			<div className="flex-grow">
-				<Outlet />
-			</div>
+			<Outlet />
 			<DashFooter />
-		</div>
+		</>
 	);
 };
 export default DashLayout;

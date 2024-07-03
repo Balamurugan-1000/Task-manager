@@ -1,2 +1,1 @@
 # TechNotes
-# TechNotes

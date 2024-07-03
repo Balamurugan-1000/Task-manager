@@ -1,56 +1,69 @@
 /** @format */
 
 import { Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Layout from "./components/Layout";
-import Public from "./components/Public.tsx";
-import Login from "./features/auth/Login.tsx";
-import DashLayout from "./components/DashLayout.tsx";
-import Welcome from "./features/auth/Welcome.tsx";
-import NotesList from "./features/notes/NotesList.tsx";
-import UsersList from "./features/users/UsersList.tsx";
+import Public from "./components/Public";
+import Login from "./features/auth/Login";
+import DashLayout from "./components/DashLayout";
+import Welcome from "./features/auth/Welcome";
+import NotesList from "./features/notes/NotesList";
+import UsersList from "./features/users/UsersList";
+import Register from "./features/auth/Register";
+import Groups from "./components/Groups";
 
 function App() {
 	return (
-		<Routes>
-			<Route
-				path="/"
-				element={<Layout />}
-			>
+		<>
+			<Routes>
 				<Route
-					index
-					element={<Public />}
-				/>
-				<Route
-					path="login"
-					element={<Login />}
-				/>
-
-				<Route
-					path="dash"
-					element={<DashLayout />}
+					path="/"
+					element={<Layout />}
 				>
 					<Route
 						index
-						element={<Welcome />}
+						element={<Public />}
 					/>
-
-					<Route path="notes">
+					<Route
+						path="login"
+						element={<Login />}
+					/>
+					<Route
+						path="register"
+						element={<Register />}
+					/>
+					{/* <Route
+						path=""
+						element={<PrivateRoute />}
+					> */}
+					<Route
+						path="dash"
+						element={<DashLayout />}
+					>
 						<Route
 							index
+							element={<Welcome />}
+						/>
+						<Route
+							path="notes"
 							element={<NotesList />}
 						/>
-					</Route>
-
-					<Route path="users">
 						<Route
-							index
+							path="groups"
+							element={<Groups />}
+						/>
+						<Route
+							path="users"
 							element={<UsersList />}
 						/>
 					</Route>
+					{/* </Route> */}
 				</Route>
-				{/* End Dash */}
-			</Route>
-		</Routes>
+			</Routes>
+
+			<ToastContainer />
+		</>
 	);
 }
 
