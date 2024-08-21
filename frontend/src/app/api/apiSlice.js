@@ -3,22 +3,22 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { setCredentials, logout, setToken } from '../../features/auth/authSlice';
-
+import { Navigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 const baseQuery = fetchBaseQuery({
     baseUrl: 'http://localhost:3500',
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
         const token = getState().auth.token
-        console.log('token', token)
 
         if (token) {
             headers.set("authorization", `Bearer ${token}`)
-            console.log('headers', headers.authorization)
         }
         return headers
     }
 })
 
+// const dispatch = useDispatch();
 const baseQueryWithReauth = async (args, api, extraOptions) => {
     let result = await baseQuery(args, api, extraOptions);
     if (result?.error?.status === 401 || result.error?.originalStatus == 401) {
@@ -30,16 +30,19 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
             api,
             extraOptions
         );
-        console.log('refreshResult', refreshResult)
         if (refreshResult?.data) {
-            setToken(refreshResult.data.token)
+            localStorage.setItem('auth', refreshResult.data.token)
             console.log(refreshResult)
-            // retry original query with new access token
             result = await baseQuery(args, api, extraOptions)
         } else {
 
-            if (refreshResult?.error?.status === 401) {
+            if (refreshResult?.status === 401) {
                 refreshResult.error.data.message = "Your login has expired."
+                dispatch(logout())
+
+                console.log(refreshResult)
+                return refreshResult
+
             }
             return refreshResult
         }
@@ -49,6 +52,6 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 export const apiSlice = createApi({
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['Note', 'User'],
+    tagTypes: ['task', 'User'],
     endpoints: (builder) => ({}),
-});
+})

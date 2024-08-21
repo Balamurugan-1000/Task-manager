@@ -9,7 +9,7 @@ import { is } from 'date-fns/locale'
 
 const getAllUsers = asyncHandler(async (req, res) => {
 	const { company } = req.params
-	const users = await User.find({ company }).select('-password').lean()
+	const users = await User.find({ company }).populate('tasks').select('-password').lean().exec()
 
 	res.json(users)
 })
@@ -18,14 +18,33 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const updateUsers = asyncHandler(async (req, res) => {
 	const { id } = req.params
-	const { username, roles, acive, password, company } = req.body
+	const { username, roles, active, password } = req.body
 
-	if (!id || !username || !roles || typeof acive !== 'boolean', !company) {
-		res.status(400).json({
+	if (!id) {
+		return res.status(400).json({
 			success: false,
-			message: "All fields are required"
+			message: 'User Id is required'
 		})
 	}
+	if (!username) {
+		return res.status(400).json({
+			success: false,
+			message: 'Username is required'
+		})
+	}
+	if (!roles) {
+		return res.status(400).json({
+			success: false,
+			message: 'Roles is required'
+		})
+	}
+	if (!active) {
+		return res.status(400).json({
+			success: false,
+			message: 'Active is required'
+		})
+	}
+
 
 	const user = await User.findById(id).exec()
 
@@ -45,13 +64,13 @@ const updateUsers = asyncHandler(async (req, res) => {
 	}
 
 	user.username = username
-	user.roles = roles
-	user.active = acive
-	user.company = company
+	user.roles = roles === 'Admin' ? 5000 : 1999
+	user.active = active
 	if (password) {
 		user.password = await bcrypt.hash(password, 10)
 	}
 	const updateUser = await user.save()
+	console.log(updateUser)
 
 	res.json({
 		success: true,
@@ -206,6 +225,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 	const accessToken = generateAccessToken(res, {
 		username: user.username,
+		userid: user._id,
 		company: user.company,
 		roles: user.roles
 	});
@@ -224,6 +244,7 @@ const loginUser = asyncHandler(async (req, res) => {
 		token: accessToken,
 		user: {
 			username: user.username,
+			userid: user._id,
 			roles: user.roles,
 			company: user.company,
 			status: user.active
@@ -271,8 +292,8 @@ const createEmployeeByAdmin = asyncHandler(async (req, res) => {
 })
 
 const logoutUser = asyncHandler(async (req, res) => {
-	res.clearCookie('jwt')
-	res.clearCookie('refreshToken')
+	res?.clearCookie('jwt')
+	res?.clearCookie('refreshToken')
 	res.json({
 		success: true,
 		message: 'Logged out successfully'
@@ -283,6 +304,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 const refreshToken = asyncHandler(async (req, res) => {
 	const token = req.cookies.refreshToken
 	if (!token) {
+		logoutUser(req, res);
 		return res.status(401).json({
 			success: false,
 			message: 'No token found'
@@ -298,6 +320,7 @@ const refreshToken = asyncHandler(async (req, res) => {
 			}
 			const accessToken = generateAccessToken(res, {
 				username: user.username,
+				userid: user._id,
 				roles: user.roles,
 				company: user.company
 			})

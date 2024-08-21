@@ -1,33 +1,50 @@
-/**
- * eslint-disable no-mixed-spaces-and-tabs
- *
- * @format
- */
-
 /** @format */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useSelector } from "react-redux";
 import {
 	useGetAllUsersQuery,
 	useCreateEmployeeMutation,
 	useDeleteEmployeeMutation,
+	useUpdateEmployeeMutation,
 } from "./usersApiSlice.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+
 const UsersList = () => {
 	const company = useSelector(state => state.auth.user.user.company);
+	const name = useSelector(state => state.auth.user.user.username);
 	const {
 		data: users,
 		error,
 		isLoading,
 		refetch,
-	} = useGetAllUsersQuery({ company });
+	} = useGetAllUsersQuery(company);
 	const [createEmployee, { data, error: createError }] =
 		useCreateEmployeeMutation();
 	const [deleteEmployee] = useDeleteEmployeeMutation();
+	const [updateEmployee] = useUpdateEmployeeMutation();
+
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
+	const [roles, setRoles] = useState("Employee");
+	const [active, setActive] = useState(true);
+
+	const [editUser, setEditUser] = useState(null);
+
+	useEffect(() => {
+		if (createError) {
+			toast.error(createError);
+		}
+	}, [createError]);
+
+	useEffect(() => {
+		setUsername("");
+		setPassword("");
+		setRoles("");
+		setActive(true);
+	}, [users]);
+
+	console.log(users);
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>Error: {error}</div>;
 
@@ -48,6 +65,19 @@ const UsersList = () => {
 		(document.getElementById("my_modal_3") as HTMLDialogElement).close();
 	};
 
+	const editEmployeeHandler = async e => {
+		e.preventDefault();
+		if (!editUser) return;
+
+		await updateEmployee({ id: editUser._id, username, active, roles });
+		setEditUser(null);
+		setActive(true);
+		setUsername("");
+		setRoles("");
+		refetch();
+		(document.getElementById("my_modal_2") as HTMLDialogElement).close();
+	};
+
 	const deleteEmployeeHandler = async ({ id }) => {
 		const confirm = window.confirm("Are you sure?");
 		if (confirm) {
@@ -59,21 +89,31 @@ const UsersList = () => {
 	if (users?.success === false) {
 		return <div>Error: {users?.message}</div>;
 	}
-	const usersData = users.filter(user => user.roles !== 5000);
+	const usersData = users.filter(user => user.username !== name);
+
+	const openEditModal = user => {
+		setEditUser(user);
+		setUsername(user.username);
+		setActive(user.active);
+		setRoles(user.roles);
+		document.getElementById("my_modal_2")?.showModal();
+	};
 
 	return (
-		<div className="max-w-[80%] mx-auto">
+		<div className="max-w-[90%] mx-auto">
 			<div className="overflow-x-auto">
-				{/* You can open the modal using document.getElementById('ID').showModal() method */}
 				<button
-					className="btn"
-					onClick={() =>
+					className="mt-10 ml-5 btn btn-primary btn-sm"
+					onClick={() => {
+						setActive(true);
+						setUsername("");
+						setRoles("");
 						(
 							document.getElementById(
 								"my_modal_3",
 							) as HTMLDialogElement
-						)?.showModal()
-					}
+						)?.showModal();
+					}}
 				>
 					Create User
 				</button>
@@ -83,17 +123,12 @@ const UsersList = () => {
 				>
 					<div className="modal-box">
 						<form method="dialog">
-							{/* if there is a button in form, it will close the modal */}
 							<button className="absolute btn btn-sm btn-circle btn-ghost right-2 top-2">
 								✕
 							</button>
 						</form>
-						<h3 className="text-lg font-bold">Hello!</h3>
-						<form
-							onSubmit={e => {
-								submitHandler(e);
-							}}
-						>
+						<h3 className="text-lg font-bold">Create User</h3>
+						<form onSubmit={submitHandler}>
 							<input
 								type="text"
 								placeholder="Username"
@@ -109,13 +144,11 @@ const UsersList = () => {
 								onChange={e => setPassword(e.target.value)}
 								value={password}
 							/>
-
 							<button className="btn">Add</button>
 						</form>
 					</div>
 				</dialog>
 				<table className="table">
-					{/* head */}
 					<thead>
 						<tr>
 							<th>Name</th>
@@ -127,12 +160,9 @@ const UsersList = () => {
 						</tr>
 					</thead>
 					<tbody>
-						{/* row 1 */}
-
 						{usersData?.map(user => (
 							<tr key={user._id}>
 								<td>{user.username}</td>
-
 								<td>
 									{user.roles === 5000 ? "Admin" : "Employee"}
 								</td>
@@ -149,13 +179,19 @@ const UsersList = () => {
 									{user?.tasks?.length === 0
 										? "No Task"
 										: user?.tasks?.map(task => (
-												<p key={task._id}>
-													{task.name}
+												<p
+													key={task._id}
+													className="py-1 mb-3 rounded-md text-[15px]"
+												>
+													{task.title}
 												</p>
 										  ))}
 								</td>
 								<td>
-									<button className="btn btn-sm btn-ghost">
+									<button
+										className="btn btn-sm btn-primary hover:bg-blue-500"
+										onClick={e => openEditModal(user)}
+									>
 										Edit
 									</button>
 								</td>
@@ -166,7 +202,7 @@ const UsersList = () => {
 												id: user._id,
 											})
 										}
-										className="btn btn-sm btn-danger"
+										className="text-white bg-red-500 btn btn-sm hover:bg-red-600 "
 									>
 										Delete
 									</button>
@@ -174,9 +210,70 @@ const UsersList = () => {
 							</tr>
 						))}
 					</tbody>
-					{/* foot */}
 				</table>
 			</div>
+
+			{editUser && (
+				<dialog
+					id="my_modal_2"
+					className="modal"
+				>
+					<div className="modal-box">
+						<form
+							onSubmit={editEmployeeHandler}
+							className="gap-2 text-xl "
+						>
+							<input
+								type="text"
+								placeholder="Username"
+								className="w-full mb-2 text-xl outline-none input placeholder:text-xl"
+								onChange={e => setUsername(e.target.value)}
+								value={username}
+								autoFocus
+							/>
+
+							<input
+								type="checkbox"
+								onChange={e => setActive(e.target.checked)}
+								checked={active}
+							/>
+							<label>Active</label>
+							<select
+								className="input"
+								onChange={e => setRoles(e.target.value)}
+								value={roles}
+							>
+								<option value="">Select Role</option>
+								<option value="Admin">Admin</option>
+								<option value="Employee">Employee</option>
+							</select>
+							<button
+								className="btn"
+								type="submit"
+							>
+								Update
+							</button>
+						</form>
+					</div>
+					<form
+						onSubmit={e => {
+							e.preventDefault();
+							setEditUser(null)(
+								document.getElementById(
+									"my_modal_2",
+								) as HTMLDialogElement,
+							).close();
+							setActive(true);
+							setUsername("");
+							setRoles("");
+						}}
+						method="dialog"
+						className="modal-backdrop"
+					>
+						<button>close</button>
+					</form>
+				</dialog>
+			)}
 		</div>
 	);
 };

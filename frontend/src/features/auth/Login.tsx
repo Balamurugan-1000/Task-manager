@@ -37,6 +37,7 @@ const Login = () => {
 	if (token) {
 		return <Navigate to="/dash" />;
 	}
+
 	return (
 		<div className="min-h-screen gap-20 hero bg-base-200">
 			<div className="flex-col gap-20 hero-content lg:flex-row-reverse min-w-[50%] ">

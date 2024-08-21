@@ -1,13 +1,14 @@
 import mongoose from "mongoose";
-import sequence from 'mongoose-sequence'
-// const { default: sequence } = await import('mongoose-sequence');
-const AutoIncrement = sequence(mongoose);
+
 const taskSchema = new mongoose.Schema({
 	AssignedTo: {
 		type: mongoose.Schema.Types.ObjectId,
-		required: true,
 		ref: 'User'
 
+	},
+	AssignedGroup: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Group'
 	},
 	title: {
 		type: String,
@@ -26,7 +27,7 @@ const taskSchema = new mongoose.Schema({
 		required: true
 	},
 	DueDate: {
-		type: String,
+		type: Date,
 		required: true
 	},
 	Subtasks: [{
@@ -37,10 +38,6 @@ const taskSchema = new mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Group'
 	}
-
-
-
-
 },
 	{
 		timestamps: true
@@ -48,9 +45,5 @@ const taskSchema = new mongoose.Schema({
 )
 
 
-taskSchema.plugin(AutoIncrement, {
-	inc_field: 'ticket',
-	id: 'ticketNums',
-	start_set: 500
-})
+
 export default mongoose.model('Task', taskSchema)

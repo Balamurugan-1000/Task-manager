@@ -3,203 +3,175 @@ import User from "../models/User.js"
 import Task from "../models/Task.js"
 import asyncHandler from 'express-async-handler'
 import expressAsyncHandler from "express-async-handler"
-const getAllGroups = expressAsyncHandler(async (req, res) => {
-	try {
 
-		const groupsResult = await Group.find().populate('members').populate('createdBy')
 
-		const groups = groupsResult.map(group => {
-			return {
-				_id: group._id,
-				name: group.name,
-				description: group.description,
-				members: group.members.map(member => {
-					return {
-						username: member.username,
-						roles: member.roles
-					}
-				}),
-				createdBy: { NAME: group.createdBy.username, ROLE: group.createdBy.roles },
-				createdAt: group.createdAt
-			}
-		}
-		)
+const getAllGroups = asyncHandler(async (req, res) => {
+	const company = req.params.company
 
-		res.status(200).json(groups)
-	} catch (error) {
-		res.status(404).json({
+	const groups = await Group.find({ company }).lean().exec()
+	if (!groups) {
+		return res.status(404).json({
 			success: false,
-			message: error.message
+			message: 'Groups not found'
 		})
 	}
+
+
+
+
+	for (let i = 0; i < groups.length; i++) {
+		const group = groups[i]
+		const members = await User.find({ _id: { $in: group.members } }).lean().exec()
+		const tasks = await Task.find({ _id: { $in: group.tasks } }).lean().exec()
+
+		groups[i] = {
+			...group,
+			members,
+			tasks
+		}
+	}
+
+
+	res.json({
+		success: true,
+		data: groups
+	})
+
+
+
 })
 
-
-
 const createGroup = asyncHandler(async (req, res) => {
-	const { name, description, members, createdBy } = req.body
-	const group = await Group.create({ name, description, members, createdBy })
-	const user = await User.findById(createdBy)
-	await group.save()
-	res.status(201).json({
-		_id: group._id,
-		name: group.name,
-		description: group.description,
-		members: group.members,
-		createdBy: user.username,
-		createdAt: group.createdAt,
+	const { company } = req.params
+	const { name } = req.body
+
+	if (!name) {
+		return res.status(400).json({
+			success: false,
+			message: 'Name is required'
+		})
+	}
+	if (!company) {
+		return res.status(400).json({
+			success: false,
+			message: 'Company is required'
+		})
+	}
+
+	//Check if group already exists
+	const existingGroup = await Group.findOne({ name, company }).lean().exec()
+	if (existingGroup) {
+		return res.status(400).json({
+			success: false,
+			message: 'Group already exists'
+		})
+	}
+
+	console.log(existingGroup)
+	const group = await Group.create({ name, company })
+
+	res.json({
 		success: true,
+		data: group
+	})
+})
+
+const deleteGroup = asyncHandler(async (req, res) => {
+	const groupId = req.params.id
+	console.log(groupId)
+
+	const group = await Group.findById(groupId)
+	console.log(group)
+	if (!group) {
+		console.log('Group not found')
+		return res.status(404).json({
+			success: false,
+			message: 'Group not found'
+		})
+	}
+
+	await group.deleteOne()
+
+
+
+	res.json({
+		success: true,
+		message: 'Group deleted'
+	})
+})
+
+const addMemberToGroup = asyncHandler(async (req, res) => {
+	const { id: groupId } = req.params
+	const { userId } = req.body
+
+	const group = await Group.findById(groupId).exec()
+	const user = await User.findById(userId).exec()
+
+	if (!group || !user) {
+		return res.status(404).json({
+			success: false,
+			message: 'Group or User not found'
+		})
+	}
+	group.members.push(user._id)
+	user.groups.push(group._id)
+
+	await user.save()
+	await group.save()
+
+	res.json({
+		success: true,
+		message: 'User added to group'
+	})
+})
+
+const removeMemberFromGroup = asyncHandler(async (req, res) => {
+	const { id: groupId } = req.params
+	const { userId } = req.body
+
+
+	console.log(groupId, userId)
+	const group = await Group.findById
+		(groupId).exec()
+	const user = await User.findById(userId).exec()
+
+	if (!group || !user) {
+		return res.status(404).json({
+			success: false,
+			message: 'Group or User not found'
+		})
+	}
+
+	group.members.pull(user._id)
+	user.groups.pull(group._id)
+
+	await user.save()
+
+	await group.save()
+
+	res.json({
+		success: true,
+		message: 'User removed from group'
+	})
+
+
+})
+const getGroupByUser = asyncHandler(async (req, res) => {
+	const userId = req.params.id
+	const groups = await Group.find({ members: userId }).populate('members').populate('tasks')
+		.lean().exec()
+	if (!groups) {
+		return res.status(404).json({
+			success: false,
+			message: 'Groups not found'
+		})
+	}
+
+	res.json({
+		success: true,
+		data: groups
 	})
 
 })
 
-
-const getGroupById = asyncHandler(async (req, res) => {
-	const group
-		= await Group.findById(req.params.id).populate('members').populate('createdBy')
-	if (group) {
-		res.status(200).json(group)
-	}
-	else {
-		res.status(404)
-		throw new Error('Group not found')
-	}
-}
-)
-
-
-const updateGroup = asyncHandler(async (req, res) => {
-	const group
-		= await Group.findById(req.params.id)
-	if (group) {
-
-
-		group.name = req.body.name || group.name
-		group.description = req.body.description || group.description
-		group.members = req.body.members || group.members
-		const updatedGroup = await group.save()
-		res.status(200).json(updatedGroup)
-	}
-	else {
-		res.status(404)
-		throw new Error('Group not found')
-	}
-}
-)
-
-
-
-const deleteGroup = asyncHandler(async (req, res) => {
-	const group
-		= await Group.findById(req.params.id)
-	if (group) {
-		await Group.findByIdAndDelete(req.params.id)
-		res.status(200).json({
-			success: true,
-			message: 'Group removed'
-		})
-	}
-	else {
-		res.status(404)
-		throw new Error('Group not found')
-	}
-}
-)
-
-
-const addMemberToGroup = asyncHandler(async (req, res) => {
-	const group
-		= await Group.findById(req.params.id)
-	if (group) {
-
-		const user = await User.findById(req.body.userId)
-
-		//Check if user exists in the group already
-
-		const userExists = group.members.find(member => member._id.toString() === user._id.toString())
-
-		if (userExists) {
-			res.status(400)
-			throw new Error('User already exists in the group')
-		}
-		if (user) {
-
-			group.members.push(user)
-			await group.save()
-			user.groups.push(group)
-			await user.save()
-
-		}
-		else {
-			res.status(404)
-			throw new Error('User not found')
-		}
-	}
-	else {
-		res.status(404)
-		throw new Error('Group not found')
-	}
-
-
-
-	return res.status(200).json(group)
-}
-)
-
-
-const removeMemberFromGroup = asyncHandler(async (req, res) => {
-	const group
-		= await Group.findById(req.params.id)
-	if (group) {
-
-		const user
-			= await User.findById(req.params.userId)
-		if (user) {
-			group.members.pull(user)
-			await group.save()
-			user.groups.pull(group)
-			await user.save()
-			res.status(200).json(group)
-		}
-		else {
-			res.status(404)
-			throw new Error('User not found')
-		}
-	}
-	else {
-		res.status(404)
-		throw new Error('Group not found')
-	}
-}
-)
-
-
-const getGroupTasks = asyncHandler(async (req, res) => {
-	const group
-		= await Group.findById(req.params.id)
-	if (group) {
-		const tasks
-			= await Task.find({
-				group: group._id
-			}).populate('assignedTo').populate('createdBy')
-		res.status(200).json(tasks)
-	}
-	else {
-		res.status(404)
-		throw new Error('Group not found')
-	}
-}
-)
-
-export default {
-
-	getAllGroups,
-	createGroup,
-	getGroupById,
-	updateGroup,
-	deleteGroup,
-	addMemberToGroup,
-	removeMemberFromGroup,
-	getGroupTasks
-
-}
+export default { getAllGroups, createGroup, deleteGroup, addMemberToGroup, removeMemberFromGroup, getGroupByUser }

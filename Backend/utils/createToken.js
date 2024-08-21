@@ -9,14 +9,15 @@ const generateAccessToken = (res, user) => {
 
 	);
 
+	console.log({ token });
+
 	return token;
 }
 
 const generateRefreshToken = (res, user) => {
-	const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN, { expiresIn: '1d' });
+	const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN, { expiresIn: '7d' });
 
 	res.cookie('refreshToken', refreshToken, { httpOnly: true });
-
 	return {
 		success: true,
 		message: 'Token generated',

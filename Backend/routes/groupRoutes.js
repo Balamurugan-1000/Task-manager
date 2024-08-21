@@ -5,25 +5,19 @@ import { authenticate, authorizeAdmin } from "../middleware/auth.js";
 
 const router = express.Router()
 
-router.route(authenticate, authorizeAdmin, '/')
-	.get(groupController.getAllGroups)
-	.post(groupController.createGroup)
-router.route(authenticate, authorizeAdmin, '/:id')
-	.patch(groupController.updateGroup)
-	.delete(groupController.deleteGroup)
+router.route('/:company')
+	.get(authenticate, authorizeAdmin, groupController.getAllGroups)
+	.post(authenticate, authorizeAdmin, groupController.createGroup)
 
-router.route(authenticate, authorizeAdmin, '/:id')
-	.get(groupController.getGroupById)
+router.route('/:id')
+	.delete(authenticate, authorizeAdmin, groupController.deleteGroup)
 
-router.route(authenticate, authorizeAdmin, '/:id/tasks')
-	.get(groupController.getGroupTasks)
-
-router.route(authenticate, authorizeAdmin, '/:id/members/:userId')
-	.delete(groupController.removeMemberFromGroup)
-
-router.route(authenticate, authorizeAdmin, '/:id/members')
-	.post(groupController.addMemberToGroup)
+router.route('/addMember/:id')
+	.patch(authenticate, authorizeAdmin, groupController.addMemberToGroup)
+router.route('/removeMember/:id')
+	.patch(authenticate, authorizeAdmin, groupController.removeMemberFromGroup)
 
 
-
+router.route("/user/:id")
+	.get(authenticate, groupController.getGroupByUser)
 export default router

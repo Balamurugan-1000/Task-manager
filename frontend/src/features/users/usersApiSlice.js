@@ -1,12 +1,8 @@
 
 import { apiSlice } from '../../app/api/apiSlice';
-import { useSelector } from 'react-redux';
-const GetUser = () => {
-
-    const user = useSelector(state => state.auth.user.user)
-    return user.com
-}
-
+let user = localStorage.getItem("user");
+user = JSON.parse(user);
+export const company = user?.user?.company
 export const usersApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         loginUser: builder.mutation({
@@ -16,13 +12,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 body,
             }),
         }),
-        createEmployeeByAdmin: builder.mutation({
-            query: (body) => ({
-                url: `users/createEmployee`,
-                method: 'POST',
-                body,
-            }),
-        }),
+
         registerUser: builder.mutation({
             query: (body) => ({
                 url: `auth/register`,
@@ -31,9 +21,8 @@ export const usersApiSlice = apiSlice.injectEndpoints({
             }),
         }),
         getAllUsers: builder.query({
-            query: ({ company }) => `users/${company}`,
+            query: (company) => `users/${company}`,
         }),
-
         createEmployee: builder.mutation({
             query: ({ username, password, company }) => ({
                 url: `users/createEmployee`,
@@ -51,19 +40,31 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 url: `users/${id}`,
                 method: 'DELETE'
             })
-        })
+        }),
+        updateEmployee: builder.mutation({
+            query: ({ id, username, roles, active }) => ({
+                url: `users/${id}`,
+                method: 'PATCH',
+                body: {
+                    username,
+                    roles,
+                    active
+                }
+            })
+        }),
+
 
 
     }),
 })
 
-export const { useLoginUserMutation, useCreateEmployeeByAdminMutation,
+export const { useLoginUserMutation,
     useRegisterUserMutation,
     useGetAllUsersQuery,
     useCreateEmployeeMutation,
-    useDeleteEmployeeMutation
+    useDeleteEmployeeMutation,
+    useUpdateEmployeeMutation
 
 
 } = usersApiSlice;
-
 

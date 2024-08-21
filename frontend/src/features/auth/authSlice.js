@@ -21,7 +21,10 @@ const authSlice = createSlice({
 			state.isAutheticated = false
 			state.token = null
 			state.user = null
-			localStorage.clear()
+			localStorage.clear('auth')
+			localStorage.clear('company')
+			// Redirect to login page
+			window.location.href = '/login';
 
 		},
 	},

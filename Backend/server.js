@@ -37,7 +37,7 @@ app.use('/', router)
 
 app.use('/auth', authRoutes)
 app.use('/users', userRoutes)
-app.use('/tasks', authenticate, taskRoutes)
+app.use('/tasks', taskRoutes)
 app.use('/groups', groupRoutes)
 app.all('*', (req, res) => {
 	res.status(404)

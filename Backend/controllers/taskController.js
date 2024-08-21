@@ -1,15 +1,14 @@
 import User from '../models/User.js'
 import Task from '../models/Task.js'
 import asyncHandler from 'express-async-handler'
-
-
+import Group from '../models/Group.js'
 const getAllTasks = asyncHandler(async (req, res) => {
 	console.log('get all tasks')
-	const tasks = await Task.find()
+	const tasks = await Task.find().populate('AssignedTo').populate('AssignedGroup').exec()
 	if (!tasks?.length) {
-		return res.status(404).json({
+		return res.status(200).json({
 			success: true,
-			message: 'No tasks found'
+			message: []
 		})
 	}
 	res.json(tasks)
@@ -18,6 +17,7 @@ const getAllTasks = asyncHandler(async (req, res) => {
 
 const createNewTask = asyncHandler(async (req, res) => {
 	const { AssignedTo, title, description, status, priority, DueDate } = req.body
+
 	if (!AssignedTo, !title, !description, !status, !priority, !DueDate) {
 		res.status(409).json({
 			success: false,
@@ -50,6 +50,9 @@ const createNewTask = asyncHandler(async (req, res) => {
 
 	const task = await Task.create(taskObject)
 	if (task) {
+		userData.tasks.push(task._id)
+		await User.findByIdAndUpdate(AssignedTo, userData).exec()
+		await task.save()
 		res.status(201).json({
 			success: true,
 			message: `Task ${title} was created successfully`
@@ -106,9 +109,9 @@ const updateTask = asyncHandler(async (req, res) => {
 
 
 const deleteTask = asyncHandler(async (req, res) => {
-	const { id } = req.body
+	const { taskId } = req.params
 
-	if (!id) {
+	if (!taskId) {
 		return res.status(400).json({
 
 			message: 'Task ID required'
@@ -116,7 +119,11 @@ const deleteTask = asyncHandler(async (req, res) => {
 	}
 
 
-	const task = await Task.findById(id).exec()
+	const task = await Task.findById(taskId).exec()
+
+	const user = await User.findById(task.AssignedTo).exec()
+
+	user.tasks.pull(taskId)
 
 	if (!task) {
 		return res.status(400).json({
@@ -126,6 +133,12 @@ const deleteTask = asyncHandler(async (req, res) => {
 	}
 
 	const result = await task.deleteOne()
+	const group = await Group.findById(task.AssignedGroup).exec()
+
+	if (group) {
+		group.tasks.pull(taskId)
+		await group.save()
+	}
 
 	const reply = `Task '${task.title}' with ID ${task._id} deleted`
 
@@ -160,16 +173,17 @@ const getTaskById = asyncHandler(async (req, res) => {
 
 
 const addNewTaskToGroup = asyncHandler(async (req, res) => {
-	const { id, groupId } = req.body
+	const { taskId, groupId } = req.params
+	console.log('task id', taskId)
 
-	if (!id || !groupId) {
+	if (!taskId || !groupId) {
 		return res.status(400).json({
 			success: false,
 			message: 'Task ID and Group ID required'
 		})
 	}
 
-	const task = await Task.findById(id).exec()
+	const task = await Task.findById(taskId).exec()
 	if (!task) {
 		return res.status(400).json({
 			success: false,
@@ -186,9 +200,27 @@ const addNewTaskToGroup = asyncHandler(async (req, res) => {
 		})
 	}
 
-	group.tasks.push(id)
 
-	const updatedGroup = await group.save()
+	const duplicate = group.tasks.includes(taskId)
+	console.log('duplicate', duplicate)
+	if (duplicate) {
+		console.log('duplicate', duplicate)
+		return res.status(400).json({
+			success: false,
+			message: 'Task already exists in Group'
+		})
+
+	} else {
+
+		group.tasks.push(taskId)
+		task.AssignedGroup = groupId
+
+		await task.save()
+
+		const updatedGroup = await group.save()
+	}
+
+
 
 
 	res.json({
@@ -274,20 +306,17 @@ const getTasksByGroup = asyncHandler(async (req, res) => {
 
 
 const getTasksByUser = asyncHandler(async (req, res) => {
-	const { userId } = req.params
+	const { username } = req.params
 
-	if (!userId) {
+
+	if (!username) {
 		return res.status(400).json({
 			success: false,
-			message: 'User ID required'
+			message: 'User name required'
 		})
 	}
 
-	const user = await User
-		.findById(userId)
-		.populate('tasks')
-		.exec()
-
+	const user = await User.findOne({ username }).exec()
 
 	if (!user) {
 		return res.status(400).json({
@@ -296,12 +325,41 @@ const getTasksByUser = asyncHandler(async (req, res) => {
 		})
 	}
 
+	const tasks = await Task.find({ AssignedTo: user._id }).exec()
 
-	res.json(user.tasks)
+	res.json(tasks)
 
 
 })
 
+const updateStatusByEmployee = asyncHandler(async (req, res) => {
+	const { taskId } = req.params
+	const { status } = req.body
+	const task = await Task.findById(taskId).exec()
+
+	console.log(status)
+	if (!task) {
+		return res.status(400).json({
+			success: false,
+			message: 'Task not found'
+		})
+	}
+	// Update task status
+
+	task.status = status
+	await task.save()
+
+
+
+
+	console.log(task)
+
+	res.json({
+		success: true,
+		message: `Task status updated to ${status}`
+	})
+})
 export default {
-	createNewTask, updateTask, deleteTask, getAllTasks, getTaskById, addNewTaskToGroup, removeTaskFromGroup, getTasksByGroup, getTasksByUser
+	createNewTask, updateTask, deleteTask, getAllTasks, getTaskById, addNewTaskToGroup, removeTaskFromGroup, getTasksByGroup, getTasksByUser, updateStatusByEmployee
 }
+

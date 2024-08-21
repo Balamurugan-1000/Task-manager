@@ -1,11 +1,12 @@
 /** @format */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useSelector } from "react-redux";
 
 import { useRegisterUserMutation } from "../users/usersApiSlice.js";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 const Register = () => {
 	const navigate = useNavigate();
 	const [register] = useRegisterUserMutation();
@@ -14,6 +15,7 @@ const Register = () => {
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [email, setEmail] = useState("");
+	const token = useSelector(state => state.auth.token);
 
 	const registerClick = async (e: any) => {
 		e.preventDefault();
@@ -47,6 +49,9 @@ const Register = () => {
 			console.log(error);
 		}
 	};
+	if (token) {
+		return <Navigate to="/dash" />;
+	}
 	return (
 		<div className="min-h-screen gap-20 hero bg-base-200">
 			<div className="flex-col gap-20 hero-content lg:flex-row-reverse min-w-[50%] ">

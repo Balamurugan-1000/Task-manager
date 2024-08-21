@@ -8,11 +8,12 @@ import Public from "./components/Public";
 import Login from "./features/auth/Login";
 import DashLayout from "./components/DashLayout";
 import Welcome from "./features/auth/Welcome";
-import NotesList from "./features/notes/NotesList";
+import TasksList from "./features/tasks/TasksList";
 import UsersList from "./features/users/UsersList";
 import Register from "./features/auth/Register";
 import Groups from "./components/Groups";
-
+import UserTask from "./components/UserTask";
+import UserGroups from "./components/UserGroups";
 function App() {
 	return (
 		<>
@@ -33,10 +34,7 @@ function App() {
 						path="register"
 						element={<Register />}
 					/>
-					{/* <Route
-						path=""
-						element={<PrivateRoute />}
-					> */}
+
 					<Route
 						path="dash"
 						element={<DashLayout />}
@@ -46,8 +44,8 @@ function App() {
 							element={<Welcome />}
 						/>
 						<Route
-							path="notes"
-							element={<NotesList />}
+							path="tasks"
+							element={<TasksList />}
 						/>
 						<Route
 							path="groups"
@@ -56,6 +54,14 @@ function App() {
 						<Route
 							path="users"
 							element={<UsersList />}
+						/>
+						<Route
+							path="tasksAssigned"
+							element={<UserTask />}
+						/>
+						<Route
+							path="groupsAssigned"
+							element={<UserGroups />}
 						/>
 					</Route>
 					{/* </Route> */}

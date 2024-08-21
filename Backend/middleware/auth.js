@@ -9,21 +9,19 @@ export const authenticate = (req, res, next) => {
 	}
 
 	const token = authHeader.split(' ')[1]
-	console.log(token)
 
 	jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
 		if (err) {
+			console.log(err)
 			return res.status(401).send('Failed to authenticate token')
 		};
 		req.user = decoded;
-		console.log(decoded)
 		next();
 	});
 }
 
 
 export const authorizeAdmin = (req, res, next) => {
-	console.log(req.user)
 	if (req.user.roles === 5000) {
 		next()
 	}

@@ -7,18 +7,21 @@ router.route('/')
 	.get(authenticate, authorizeAdmin, taskController.getAllTasks)
 	.post(authenticate, authorizeAdmin, taskController.createNewTask)
 	.patch(authenticate, authorizeAdmin, taskController.updateTask)
-	.delete(authenticate, authorizeAdmin, taskController.deleteTask)
+
 
 
 
 router.route('/:taskId')
 	.get(authenticate, authorizeAdmin, taskController.getTaskById)
+	.delete(authenticate, authorizeAdmin, taskController.deleteTask)
 
+router.route('/:taskId/status')
+	.patch(authenticate, taskController.updateStatusByEmployee)
 router.route('/group/:groupId')
 	.get(authenticate, authorizeAdmin, taskController.getTasksByGroup)
 
-router.route('/user/:userId')
-	.get(authenticate, authorizeAdmin, taskController.getTasksByUser)
+router.route('/user/:username')
+	.get(authenticate, taskController.getTasksByUser)
 
 
 router.route('/group/:groupId/task/:taskId')
